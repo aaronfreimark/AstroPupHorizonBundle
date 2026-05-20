@@ -56,9 +56,15 @@ public final class BundleStore: ObservableObject {
 
     // MARK: - URL helpers
 
-    /// Resolve the `Documents/Captures/` directory inside an iCloud
-    /// Drive ubiquity container, suitable for use as a
-    /// `BundleStore.baseURL`.
+    /// Resolve a directory inside an iCloud Drive ubiquity container,
+    /// suitable for use as a `BundleStore.baseURL`.
+    ///
+    /// The default `subpath` is `"Documents"`, which is the only
+    /// location iCloud exposes to Files.app / Finder when the
+    /// container declares `NSUbiquitousContainerIsDocumentScopePublic`.
+    /// Apps that want a private (non-user-visible) location can pass
+    /// a different subpath (e.g. `"Data/Bundles"`) but lose the
+    /// Files.app surface.
     ///
     /// Returns `nil` if the calling app doesn't have iCloud
     /// Documents enabled, the container isn't reachable, or the
@@ -70,9 +76,9 @@ public final class BundleStore: ObservableObject {
     /// resolve on cold launch can be slow because iCloud daemon
     /// initialization is involved — call off the main thread on
     /// first launch if responsiveness matters).
-    public nonisolated static func ubiquityCapturesURL(
+    public nonisolated static func ubiquityURL(
         forContainer containerIdentifier: String,
-        subpath: String = "Documents/Captures"
+        subpath: String = "Documents"
     ) -> URL? {
         guard let root = FileManager.default.url(
             forUbiquityContainerIdentifier: containerIdentifier
