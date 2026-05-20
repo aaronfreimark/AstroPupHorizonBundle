@@ -113,6 +113,17 @@ public final class BundleStore: ObservableObject {
             return
         }
 
+        // Preserve any HorizonBundle instances we already have for
+        // these URLs — mutations by callers (addFrame, setName, …)
+        // live on those instances, and replacing them with fresh
+        // HorizonBundle(url:) objects would orphan the caller's
+        // in-memory state. Instead, reuse the existing instance and
+        // drop its cached document so the next read picks up any
+        // changes from disk (e.g. a sibling app or device wrote).
+        let existingByPath = Dictionary(
+            uniqueKeysWithValues: bundles.map { ($0.url.standardizedFileURL.path, $0) }
+        )
+
         struct Entry {
             let bundle: HorizonBundle
             let sortKey: Date
@@ -121,7 +132,16 @@ public final class BundleStore: ObservableObject {
         var entries: [Entry] = []
         for url in urls {
             guard url.pathExtension == HorizonBundle.directoryExtension else { continue }
-            let bundle = HorizonBundle(url: url)
+            let bundle: HorizonBundle
+            if let existing = existingByPath[url.standardizedFileURL.path] {
+                // Drop the stale cache so the re-validate below
+                // reads the current disk state (vs. trusting whatever
+                // was cached when this instance was last visited).
+                existing.reload()
+                bundle = existing
+            } else {
+                bundle = HorizonBundle(url: url)
+            }
             // Validate by loading. Skip bundles that fail any of the
             // gates (missing bundle.json, malformed, too-new version).
             guard let document = try? bundle.loadedDocument() else { continue }
@@ -142,8 +162,17 @@ public final class BundleStore: ObservableObject {
     /// Find a bundle by its directory name (the last path
     /// component). Reads from the cached `bundles` list; call
     /// `refresh()` first if you suspect the list is stale.
+    ///
+    /// Calls `reload()` on the matched bundle before returning to
+    /// drop any stale `cachedDocument`. The next metadata read on
+    /// the returned bundle goes to disk, picking up writes that
+    /// happened on this or a sibling instance since the cache was
+    /// last populated. Cost: one bundle.json decode on next access
+    /// (a few KB).
     public func bundle(directoryName: String) -> HorizonBundle? {
-        bundles.first { $0.directoryName == directoryName }
+        let found = bundles.first { $0.directoryName == directoryName }
+        found?.reload()
+        return found
     }
 
     // MARK: - Create
