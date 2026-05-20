@@ -31,8 +31,27 @@ public final class BundleStore: ObservableObject {
     /// True while a refresh is in flight. Views can show a spinner.
     @Published public private(set) var isLoading: Bool = false
 
+    /// Live file-system observer (NSMetadataQuery) when iCloud
+    /// observation is enabled. Set by
+    /// `startObservingFileSystemChanges()` in BundleStore+Metadata.swift.
+    /// `internal` so the extension can mutate it.
+    var metadataQuery: NSMetadataQuery?
+
+    /// Tokens for the NotificationCenter observers we installed for
+    /// `metadataQuery`. Held so `stopObservingFileSystemChanges()`
+    /// can remove them.
+    var metadataObservers: [NSObjectProtocol] = []
+
     public init(baseURL: URL) {
         self.baseURL = baseURL
+    }
+
+    isolated deinit {
+        metadataQuery?.stop()
+        let center = NotificationCenter.default
+        for token in metadataObservers {
+            center.removeObserver(token)
+        }
     }
 
     // MARK: - URL helpers
