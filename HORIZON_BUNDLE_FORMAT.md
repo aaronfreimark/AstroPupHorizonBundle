@@ -53,7 +53,7 @@ indexes them.
     "longitude": -73.9961
   },
   "compassOffsetDegrees": 12.3,
-  "appVersion": "AstroPup Horizon 1.0 (1)",
+  "appVersion": "ExampleApp 1.0 (1)",
 
   "horizon": {
     "points": [
@@ -260,11 +260,16 @@ should populate the `horizon` field and append/replace entries in
 
 ## `undo.json` (optional)
 
-The horizon-editor's per-bundle undo/redo stack. Opaque to other
-applications — readers that don't implement the AstroPup horizon
-editor should ignore this file. Kept separate from `bundle.json` so
-editor-internal state doesn't churn the publicly-portable parts on
-every undo-stack push.
+An optional sidecar containing an editing app's per-bundle
+undo/redo stack. Opaque to other applications — readers should
+ignore unrecognized sidecar files. Kept separate from `bundle.json`
+so editor-internal state doesn't churn the publicly-portable parts
+on every undo-stack push.
+
+The same pattern (an additional file alongside `bundle.json`)
+applies to any app-specific sidecar — favorite-object lists,
+annotation layers, etc. The shared schema in `bundle.json` covers
+only the cross-app data.
 
 ---
 

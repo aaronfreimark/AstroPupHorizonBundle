@@ -52,29 +52,12 @@ Common entry points:
 - `bundle.image(for: pano)` / `bundle.image(for: frame)` — load image data as `PlatformImage` (UIImage on iOS, NSImage on macOS).
 - `bundle.panos` / `bundle.frames` / `bundle.horizon` — read accessors (throwing).
 
-## 4. Shared storage across apps + devices
+## 4. Where to put the bundles
 
-For multiple apps from the same developer team to see the same
-bundles — and for bundles to sync across devices — point
-`BundleStore`'s `baseURL` at an **iCloud Drive ubiquity container**
-shared between the apps:
-
-```swift
-let containerURL = FileManager.default
-    .url(forUbiquityContainerIdentifier: "iCloud.your.app.identifier")!
-    .appendingPathComponent("Documents/Captures", isDirectory: true)
-let store = BundleStore(baseURL: containerURL)
-```
-
-Requirements in each app's target:
-- iCloud capability with the same `iCloud.your.app.identifier`
-  container ID.
-- `NSUbiquitousContainerIsDocumentScopePublic = YES` in Info.plist
-  if you want the bundles to also appear in iCloud Drive in
-  Files.app / Finder.
-
-This work happens in each consuming app, not in the package —
-`BundleStore` is location-agnostic on purpose.
+`BundleStore` works against any writable directory the host app
+provides. Pick the storage location that fits your app's
+distribution and sync model — the package is intentionally
+agnostic and has no preference.
 
 ## 5. Custom sidecars
 

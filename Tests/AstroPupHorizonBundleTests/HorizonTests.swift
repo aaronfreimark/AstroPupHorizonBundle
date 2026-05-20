@@ -1,6 +1,6 @@
 //
 //  HorizonTests.swift
-//  AstroPup HorizonTests
+//  AstroPupHorizonBundleTests
 //
 //  Unit tests for the slim Horizon class — a 360-point list with
 //  helpers + Codable. Metadata (name, dates, location) now lives

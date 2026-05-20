@@ -1,6 +1,6 @@
 //
 //  Horizon.swift
-//  AstroPup Horizon
+//  AstroPupHorizonBundle
 //
 //  In-memory representation of a 360°-sampled horizon: exactly 360
 //  `HorizonPoint`s, one per integer azimuth. After the storage-layer

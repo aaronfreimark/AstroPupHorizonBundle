@@ -1,6 +1,6 @@
 //
 //  HorizonBundleError.swift
-//  AstroPup Horizon
+//  AstroPupHorizonBundle
 //
 //  Typed errors thrown by `HorizonBundle` and `BundleStore` so
 //  callers can branch on specific failure modes (e.g. surface a

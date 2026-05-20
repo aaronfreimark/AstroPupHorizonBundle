@@ -1,6 +1,6 @@
 //
 //  BundleDocument.swift
-//  AstroPup Horizon
+//  AstroPupHorizonBundle
 //
 //  The Codable representation of a `.horizon` package's `bundle.json`.
 //  Holds the entire structured content of the bundle: top-level
@@ -170,9 +170,9 @@ public struct BundleDocument: Codable, Equatable, Sendable {
             self.altitudeMax = altitudeMax
         }
 
-        /// Standard pano-kind values. The on-disk field is open
-        /// string; these are the names recognised by AstroPup
-        /// Horizon. Readers should tolerate other values.
+        /// Standard pano-kind values. The on-disk field is an open
+        /// string; readers should tolerate values they don't
+        /// recognise.
         public enum Kind {
             /// Stitched from captured source frames.
             public static let photo = "photo"
@@ -206,13 +206,12 @@ public struct BundleDocument: Codable, Equatable, Sendable {
         /// Camera pitch at capture time, degrees.
         public var altitude: Double
 
-        /// Optional camera-calibration data. Required by the
-        /// AstroPup Horizon analyzer for re-stitching / re-running
-        /// the pipeline against a saved bundle; readers that don't
-        /// perform back-projection (e.g. third-party planetarium
-        /// imports) can ignore it. Writers that don't have a
-        /// calibrated camera at capture time (e.g. an editor
-        /// authoring a bundle from a HRZ import) omit it.
+        /// Optional camera-calibration data. Needed by analyzers that
+        /// re-stitch or re-run a depth pipeline against the saved
+        /// frames. Readers that don't perform back-projection (e.g.
+        /// third-party planetarium imports) can ignore it. Writers
+        /// that don't have a calibrated camera at capture time (e.g.
+        /// an editor authoring a bundle from an HRZ import) omit it.
         public var camera: CameraData?
 
         public init(
@@ -230,8 +229,9 @@ public struct BundleDocument: Codable, Equatable, Sendable {
         }
 
         /// Per-frame camera + image dimensions needed to back-project
-        /// image pixels to camera rays. Optional in the spec but
-        /// required for the AstroPup Horizon analyzer.
+        /// image pixels to camera rays. Optional in the spec; readers
+        /// that don't need to re-analyze the source frames can ignore
+        /// it.
         public struct CameraData: Codable, Equatable, Sendable {
             /// 3×3 row-major pinhole-camera intrinsics matrix in
             /// camera-buffer pixel coordinates. Order:

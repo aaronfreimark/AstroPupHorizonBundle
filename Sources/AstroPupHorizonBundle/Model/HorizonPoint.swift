@@ -1,6 +1,6 @@
 //
 //  HorizonPoint.swift
-//  AstroPup Horizon
+//  AstroPupHorizonBundle
 //
 //  Created for discrete horizon sampling
 

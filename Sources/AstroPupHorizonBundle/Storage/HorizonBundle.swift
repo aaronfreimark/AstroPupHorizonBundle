@@ -1,6 +1,6 @@
 //
 //  HorizonBundle.swift
-//  AstroPup Horizon
+//  AstroPupHorizonBundle
 //
 //  Domain-shaped public API around a `.horizon` package on disk. The
 //  on-disk `bundle.json` (a `BundleDocument` Codable) is an

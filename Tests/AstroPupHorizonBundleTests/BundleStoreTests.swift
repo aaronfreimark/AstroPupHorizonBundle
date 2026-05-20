@@ -1,6 +1,6 @@
 //
 //  BundleStoreTests.swift
-//  AstroPup HorizonTests
+//  AstroPupHorizonBundleTests
 //
 //  Tests against the BundleStore listing / lifecycle layer using
 //  the domain-shaped HorizonBundle API. Per-test temp directory so

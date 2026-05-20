@@ -1,6 +1,6 @@
 //
 //  HorizonBundleTests.swift
-//  AstroPup HorizonTests
+//  AstroPupHorizonBundleTests
 //
 //  Tests against the domain-shaped HorizonBundle API. The on-disk
 //  Codable (BundleDocument) is an implementation detail, exercised

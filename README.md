@@ -1,21 +1,18 @@
 # AstroPupHorizonBundle
 
-A Swift package defining the `.horizon` file-system bundle format — a
-portable container for a 360° altitude profile of the local horizon,
-plus optional source frames, panoramas, and observing-site metadata.
+A Swift package implementing the `.horizon` file-system bundle format
+— a portable container for a 360° altitude profile of the local
+horizon, optionally bundled with the panoramic image used to derive
+it, the source frames captured by a phone, and observing-site
+metadata (location, capture date, compass calibration offset).
 
-Used by the [AstroPup](https://astropup.app) family of iOS apps:
+The format is intentionally simple, human-inspectable (everything is
+either JSON or a standard image format), and version-tagged. It's
+designed for sharing observing horizons between astronomy /
+planetarium apps that today each use their own ad-hoc HRZ variants.
 
-| App | Role |
-|---|---|
-| **AstroPup Horizon** | Captures a 360° sweep, analyzes it, and writes the resulting `.horizon` bundle. |
-| **AstroPup Sky**     | Reads and writes `.horizon` bundles as observing sites; lets users plan around the saved horizon. |
-
-The package is the contract between them. Anyone else who wants to
-read or produce `.horizon` files — whether that's planetarium
-software, an Android port, a sharing service, or another app
-entirely — can adopt the package directly, or implement the format
-from the spec in [`HORIZON_BUNDLE_FORMAT.md`](./HORIZON_BUNDLE_FORMAT.md).
+See [`HORIZON_BUNDLE_FORMAT.md`](./HORIZON_BUNDLE_FORMAT.md) for the
+on-disk spec; this package is the reference Swift implementation.
 
 ## What's inside
 
@@ -26,22 +23,18 @@ from the spec in [`HORIZON_BUNDLE_FORMAT.md`](./HORIZON_BUNDLE_FORMAT.md).
   bundles in a given directory.
 - `BundleDocument` — Codable shape of `bundle.json`.
 - `HorizonBundleError` — typed errors.
-- `Horizon`, `HorizonPoint` — slim 360-point altitude profile type.
+- `Horizon`, `HorizonPoint` — 360-point altitude profile type.
 - `PlatformImage` — UIImage/NSImage typealias + ImageIO encoders so
   the package compiles on both iOS and macOS.
 
-Anything app-specific (capture pipeline, stitcher, depth-estimation
-ML model, export adapters for Stellarium / SkySafari / NINA, SwiftUI
-views) lives in the consuming app, not here.
+The package is platform-agnostic about *where* the bundles live.
+`BundleStore` takes a base URL and works the same against any
+writable directory the host app chooses to point it at.
 
 ## Platforms
 
 - iOS 26+
 - macOS 15+
-
-The macOS support is forward-looking — when AstroPup's iCloud-Drive
-sync ships, `.horizon` bundles will appear automatically in Finder
-on Mac, ready for a future native consumer.
 
 ## Adding it
 
@@ -68,9 +61,9 @@ See [`INTEGRATION.md`](./INTEGRATION.md) for a deeper walk-through.
 
 ## Versioning
 
-Semantic versioning. The bundle format version is independent of the
-package version — see the spec for the on-disk format-version field
-and migration rules.
+Semantic versioning on the package. The bundle format version is
+independent of the package version — see the spec for the on-disk
+format-version field and migration rules.
 
 ## Running tests
 

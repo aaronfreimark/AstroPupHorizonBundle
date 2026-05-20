@@ -1,6 +1,6 @@
 //
 //  BundleStore.swift
-//  AstroPup Horizon
+//  AstroPupHorizonBundle
 //
 //  The listing / refresh / import layer over a directory of
 //  `.horizon` packages. Wraps a base URL (typically

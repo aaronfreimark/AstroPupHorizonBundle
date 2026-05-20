@@ -1,6 +1,6 @@
 //
 //  BundleJSON.swift
-//  AstroPup Horizon
+//  AstroPupHorizonBundle
 //
 //  Shared JSONEncoder/Decoder used by every bundle file (bundle.json,
 //  horizon.json, pano.json, frames/manifest.json). Configured once so
