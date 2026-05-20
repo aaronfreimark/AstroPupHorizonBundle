@@ -50,7 +50,8 @@ indexes them.
   "modifiedAt": "2025-09-15T10:35:12Z",
   "captureLocation": {
     "latitude": 40.6962,
-    "longitude": -73.9961
+    "longitude": -73.9961,
+    "elevation": 12.5
   },
   "compassOffsetDegrees": 12.3,
   "appVersion": "ExampleApp 1.0 (1)",
@@ -106,6 +107,7 @@ indexes them.
 | `capturedAt` | RFC3339 timestamp | no | When source frames were shot. Immutable after capture. Absent for bundles authored without a capture event (e.g. HRZ imports). |
 | `modifiedAt` | RFC3339 timestamp | no | Last modification. Writers SHOULD set this on every save when known; readers MUST tolerate absence (HRZ imports, etc.). |
 | `captureLocation.latitude` / `.longitude` | number | no | Decimal degrees, WGS84. Absent if location wasn't available. |
+| `captureLocation.elevation` | number | no | Height above mean sea level, in meters. Optional; many writers don't have this. Useful for atmospheric refraction correction in consumers that compute apparent vs. true altitudes. |
 | `compassOffsetDegrees` | number | no | Degrees to add to AR-session-local azimuths to recover true-north azimuths. Captured once at session start; never updated. Absent on bundles authored without an AR session. |
 | `appVersion` | string | no | Free-form identifier of the writing program. Diagnostic only. |
 | `horizon` | object | no | Horizon points; absent or null when not yet analyzed. |

@@ -179,6 +179,44 @@ final class HorizonBundleTests: XCTestCase {
         XCTAssertEqual(try bundle.captureLocation?.latitude, 1.0)
     }
 
+    /// Elevation is optional. Constructing a Location without one
+    /// (or with explicit nil) round-trips through the bundle with
+    /// the field absent from the encoded JSON.
+    func testCaptureLocation_elevationOptional_roundTrips() async throws {
+        let bundle = try await makeBundle(location: nil)
+        try await bundle.setCaptureLocation(.init(latitude: 1.0, longitude: 2.0))
+        XCTAssertNil(try bundle.captureLocation?.elevation)
+    }
+
+    /// Elevation, when supplied, round-trips through the bundle.
+    func testCaptureLocation_elevationProvided_roundTrips() async throws {
+        let bundle = try await makeBundle(location: nil)
+        try await bundle.setCaptureLocation(
+            .init(latitude: 40.7, longitude: -74.0, elevation: 12.5)
+        )
+        XCTAssertEqual(try bundle.captureLocation?.elevation, 12.5)
+    }
+
+    /// Bundles written before the `elevation` field existed are
+    /// missing the key from `captureLocation`. The decoder must
+    /// treat that as nil rather than throwing.
+    func testCaptureLocation_decodesLegacyJSONWithoutElevation() throws {
+        let json = #"""
+        {
+          "formatVersion": 1,
+          "name": "Legacy",
+          "captureLocation": { "latitude": 40.7, "longitude": -74.0 }
+        }
+        """#
+        let doc = try BundleJSON.decoder.decode(
+            BundleDocument.self,
+            from: Data(json.utf8)
+        )
+        XCTAssertEqual(doc.captureLocation?.latitude, 40.7)
+        XCTAssertEqual(doc.captureLocation?.longitude, -74.0)
+        XCTAssertNil(doc.captureLocation?.elevation)
+    }
+
     func testSetCompassOffsetDegrees_updates() async throws {
         let bundle = try await makeBundle()
         try await bundle.setCompassOffsetDegrees(nil)

@@ -103,9 +103,18 @@ public struct BundleDocument: Codable, Equatable, Sendable {
         public var latitude: Double
         public var longitude: Double
 
-        public init(latitude: Double, longitude: Double) {
+        /// Height above mean sea level, in meters. Optional because
+        /// many sources (manual entry, HRZ imports, ARKit captures
+        /// without explicit altitude readings) don't carry it.
+        /// Consumers that compute atmospheric refraction corrections
+        /// should fall back to a sensible default (e.g. 0 m or a
+        /// per-region average) when this is nil.
+        public var elevation: Double?
+
+        public init(latitude: Double, longitude: Double, elevation: Double? = nil) {
             self.latitude = latitude
             self.longitude = longitude
+            self.elevation = elevation
         }
     }
 
