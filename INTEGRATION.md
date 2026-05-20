@@ -1,7 +1,9 @@
 # Integrating AstroPupHorizonBundle
 
-Aimed at the Sky session / future consumers. Horizon is already wired
-up; this doc captures the steps you'd run for a fresh app.
+How to adopt this package in a Swift app that wants to read or
+write `.horizon` bundles. The format itself is documented in
+[`HORIZON_BUNDLE_FORMAT.md`](./HORIZON_BUNDLE_FORMAT.md); this doc
+covers wiring.
 
 ## 1. Add the package
 
@@ -19,12 +21,12 @@ In Xcode, with your app's project open:
 
 ## 2. Local override during package development
 
-If you're iterating on the package and want edits to take effect
-without push/tag/update, drag the local checkout
-(`/Users/aaron/src/AstroPupHorizonBundle/`) into the Xcode workspace
-window's Project Navigator. Xcode automatically prefers a workspace-
-embedded package over the remote dependency. Drag it back out when
-you're done — the remote pin still works.
+If you're iterating on the package itself and want edits to take
+effect without push/tag/update, clone the package locally and drag
+that checkout into the Xcode workspace window's Project Navigator.
+Xcode automatically prefers a workspace-embedded package over the
+remote dependency. Drag it back out when you're done — the remote
+pin still works.
 
 ## 3. Use the API
 
@@ -47,31 +49,40 @@ Common entry points:
 - `BundleStore(baseURL:)` — observe + create + import + rename + delete.
 - `HorizonBundle.create(at:name:capturedAt:captureLocation:...)` — author a new bundle.
 - `bundle.setName(_:)` / `bundle.setCaptureLocation(_:)` / `bundle.setHorizon(points:)` — domain mutations.
-- `bundle.image(for: pano)` / `bundle.image(for: frame)` — load image data.
+- `bundle.image(for: pano)` / `bundle.image(for: frame)` — load image data as `PlatformImage` (UIImage on iOS, NSImage on macOS).
 - `bundle.panos` / `bundle.frames` / `bundle.horizon` — read accessors (throwing).
 
-See `HORIZON_BUNDLE_FORMAT.md` for the on-disk format. Both apps
-must speak the same format to interop cleanly — that's what this
-package guarantees.
+## 4. Shared storage across apps + devices
 
-## 4. Shared storage location
-
-For two apps from the same team to see the same bundles, they need
-to point `BundleStore`'s `baseURL` at a shared container. The
-recommended pattern (planned for AstroPup Horizon + AstroPup Sky):
+For multiple apps from the same developer team to see the same
+bundles — and for bundles to sync across devices — point
+`BundleStore`'s `baseURL` at an **iCloud Drive ubiquity container**
+shared between the apps:
 
 ```swift
 let containerURL = FileManager.default
-    .url(forUbiquityContainerIdentifier: "iCloud.app.astropup.horizons")!
+    .url(forUbiquityContainerIdentifier: "iCloud.your.app.identifier")!
     .appendingPathComponent("Documents/Captures", isDirectory: true)
 let store = BundleStore(baseURL: containerURL)
 ```
 
-This requires:
-- Both apps share the same `iCloud.app.astropup.horizons` entitlement.
-- `NSUbiquitousContainerIsDocumentScopePublic = YES` in each app's
-  Info.plist so the container shows up in iCloud Drive in Files.app
-  and Finder.
+Requirements in each app's target:
+- iCloud capability with the same `iCloud.your.app.identifier`
+  container ID.
+- `NSUbiquitousContainerIsDocumentScopePublic = YES` in Info.plist
+  if you want the bundles to also appear in iCloud Drive in
+  Files.app / Finder.
 
-That work happens in each consuming app, not in this package — the
-package is location-agnostic on purpose.
+This work happens in each consuming app, not in the package —
+`BundleStore` is location-agnostic on purpose.
+
+## 5. Custom sidecars
+
+Bundles are package directories. Each app can add sidecar files
+alongside `bundle.json` for app-specific data (e.g. an editor's
+undo state, a planner's favorite-objects list). The package
+exposes `bundle.undoData` / `bundle.setUndoData` as a model;
+follow the same pattern for your own sidecar.
+
+Sidecars don't go into the shared `BundleDocument` schema — apps
+that don't know about them simply ignore them.
