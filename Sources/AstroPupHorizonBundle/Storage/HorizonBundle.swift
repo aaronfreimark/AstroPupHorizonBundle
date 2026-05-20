@@ -337,9 +337,9 @@ public final class HorizonBundle: Identifiable, ObservableObject, Equatable {
                 try FileManager.default.createDirectory(
                     at: dirURL, withIntermediateDirectories: true
                 )
-                try data.write(to: undoURL, options: .atomic)
+                try FileCoordination.write(data, to: undoURL)
             } else {
-                try? FileManager.default.removeItem(at: undoURL)
+                try? FileCoordination.delete(at: undoURL)
             }
         }.value
     }
@@ -380,9 +380,9 @@ public final class HorizonBundle: Identifiable, ObservableObject, Equatable {
         try await Task.detached(priority: .userInitiated) {
             try fm.createDirectory(at: url, withIntermediateDirectories: true)
             let data = try BundleJSON.encoder.encode(document)
-            try data.write(
-                to: url.appendingPathComponent(bundleJSONFilename),
-                options: .atomic
+            try FileCoordination.write(
+                data,
+                to: url.appendingPathComponent(bundleJSONFilename)
             )
         }.value
         let bundle = HorizonBundle(url: url)
@@ -394,7 +394,7 @@ public final class HorizonBundle: Identifiable, ObservableObject, Equatable {
     public func delete() async throws {
         let dirURL = url
         try await Task.detached(priority: .userInitiated) {
-            try FileManager.default.removeItem(at: dirURL)
+            try FileCoordination.delete(at: dirURL)
         }.value
         cachedDocument = nil
     }
@@ -471,7 +471,7 @@ public final class HorizonBundle: Identifiable, ObservableObject, Equatable {
                 at: dirURL, withIntermediateDirectories: true
             )
             let data = try BundleJSON.encoder.encode(snapshot)
-            try data.write(to: bundleURL, options: .atomic)
+            try FileCoordination.write(data, to: bundleURL)
         }.value
         objectWillChange.send()
         cachedDocument = snapshot
@@ -519,7 +519,7 @@ public final class HorizonBundle: Identifiable, ObservableObject, Equatable {
             try FileManager.default.createDirectory(
                 at: dirURL, withIntermediateDirectories: true
             )
-            try data.write(to: imgURL, options: .atomic)
+            try FileCoordination.write(data, to: imgURL)
         }.value
     }
 
@@ -535,21 +535,21 @@ public final class HorizonBundle: Identifiable, ObservableObject, Equatable {
             try FileManager.default.createDirectory(
                 at: framesDir, withIntermediateDirectories: true
             )
-            try data.write(to: imgURL, options: .atomic)
+            try FileCoordination.write(data, to: imgURL)
         }.value
     }
 
     private func deletePanoFile(filename: String) async throws {
         let imgURL = url.appendingPathComponent(filename)
         try await Task.detached(priority: .userInitiated) {
-            try? FileManager.default.removeItem(at: imgURL)
+            try? FileCoordination.delete(at: imgURL)
         }.value
     }
 
     private func deleteFramesDirectory() async throws {
         let framesDir = framesURL
         try await Task.detached(priority: .userInitiated) {
-            try? FileManager.default.removeItem(at: framesDir)
+            try? FileCoordination.delete(at: framesDir)
         }.value
     }
 }

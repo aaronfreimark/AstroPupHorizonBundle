@@ -197,7 +197,7 @@ public final class BundleStore: ObservableObject {
         let targetURL = baseURL.appendingPathComponent(targetDir, isDirectory: true)
 
         try await Task.detached(priority: .userInitiated) {
-            try fm.copyItem(at: sourceURL, to: targetURL)
+            try FileCoordination.copy(from: sourceURL, to: targetURL)
         }.value
 
         let imported = HorizonBundle(url: targetURL)
@@ -244,7 +244,7 @@ public final class BundleStore: ObservableObject {
             let targetURL = baseURL.appendingPathComponent(targetDir, isDirectory: true)
             let oldURL = bundle.url
             try await Task.detached(priority: .userInitiated) {
-                try FileManager.default.moveItem(at: oldURL, to: targetURL)
+                try FileCoordination.move(from: oldURL, to: targetURL)
             }.value
             // Class instance carries through the rename — update its
             // url in place rather than minting a new HorizonBundle.
