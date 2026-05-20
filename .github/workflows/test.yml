@@ -8,15 +8,34 @@ on:
 
 jobs:
   test:
-    name: swift test (macOS)
-    runs-on: macos-15
+    name: swift test
+    runs-on: macos-latest
     steps:
-      - uses: actions/checkout@v4
-      - name: Select Xcode
-        run: sudo xcode-select -s /Applications/Xcode_16.app
-      - name: Print Swift version
-        run: swift --version
+      - uses: actions/checkout@v5
+
+      - name: List installed Xcodes
+        run: ls /Applications | grep -i '^Xcode' || true
+
+      - name: Select newest installed Xcode
+        run: |
+          set -euo pipefail
+          # Sort `/Applications/Xcode_NN.M.app` by version, pick the highest.
+          # Falls back to the plain `/Applications/Xcode.app` if no
+          # versioned bundles are present.
+          LATEST=$(ls -d /Applications/Xcode_*.app 2>/dev/null | sort -V | tail -n1 || true)
+          if [ -z "${LATEST}" ]; then
+            LATEST=/Applications/Xcode.app
+          fi
+          echo "Selecting ${LATEST}"
+          sudo xcode-select -s "${LATEST}"
+
+      - name: Show toolchain
+        run: |
+          xcodebuild -version
+          swift --version
+
       - name: Build
         run: swift build
+
       - name: Test
         run: swift test --parallel
