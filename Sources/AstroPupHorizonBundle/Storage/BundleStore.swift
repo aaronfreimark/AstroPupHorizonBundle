@@ -35,27 +35,33 @@ public final class BundleStore: ObservableObject {
         self.baseURL = baseURL
     }
 
-    /// App-wide store rooted at `Documents/Captures/`. Production
-    /// callers use this; tests construct their own with a temp
-    /// directory.
+    // MARK: - URL helpers
+
+    /// Resolve the `Documents/Captures/` directory inside an iCloud
+    /// Drive ubiquity container, suitable for use as a
+    /// `BundleStore.baseURL`.
     ///
-    /// `XCODE_RUNNING_FOR_PREVIEWS` short-circuit: under SwiftUI
-    /// preview rendering the auto-`refresh()` on first access is
-    /// skipped so #Preview blocks can assign synthetic bundles to
-    /// `bundles` without the disk-scan immediately overwriting
-    /// them.
-    public static let shared: BundleStore = {
-        let docs = FileManager.default.urls(
-            for: .documentDirectory, in: .userDomainMask
-        ).first ?? FileManager.default.temporaryDirectory
-        let store = BundleStore(
-            baseURL: docs.appendingPathComponent("Captures", isDirectory: true)
-        )
-        if ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] != "1" {
-            Task { await store.refresh() }
+    /// Returns `nil` if the calling app doesn't have iCloud
+    /// Documents enabled, the container isn't reachable, or the
+    /// device isn't signed in to iCloud. Callers should fall back
+    /// to a local directory in that case so the app keeps working.
+    ///
+    /// Blocks until the container's URL is resolved (cheap once
+    /// the system has the container registered, but the first
+    /// resolve on cold launch can be slow because iCloud daemon
+    /// initialization is involved — call off the main thread on
+    /// first launch if responsiveness matters).
+    public nonisolated static func ubiquityCapturesURL(
+        forContainer containerIdentifier: String,
+        subpath: String = "Documents/Captures"
+    ) -> URL? {
+        guard let root = FileManager.default.url(
+            forUbiquityContainerIdentifier: containerIdentifier
+        ) else {
+            return nil
         }
-        return store
-    }()
+        return root.appendingPathComponent(subpath, isDirectory: true)
+    }
 
     // MARK: - Refresh
 
