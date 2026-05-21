@@ -175,6 +175,20 @@ public final class BundleStore: ObservableObject {
         return found
     }
 
+    /// Find a bundle by its stable identifier. Surveys `bundles` in
+    /// order and returns the first match. Returns `nil` if no
+    /// bundle in the current list carries that id — which is
+    /// expected for a legacy bundle that's never been mutated, and
+    /// possibly transient before a sync completes.
+    ///
+    /// Like `bundle(directoryName:)`, this `reload()`s the matched
+    /// bundle so the next metadata read goes to disk.
+    public func bundle(id: UUID) -> HorizonBundle? {
+        let found = bundles.first { (try? $0.bundleID) == id }
+        found?.reload()
+        return found
+    }
+
     // MARK: - Create
 
     /// Create a new bundle with the given initial metadata. Picks a

@@ -133,6 +133,16 @@ public final class HorizonBundle: Identifiable, ObservableObject, Equatable {
         get throws { try ensureDocument().formatVersion }
     }
 
+    /// Stable identifier for this bundle. Returns `nil` only for
+    /// bundles written before the `id` field was introduced AND
+    /// never mutated since (the `persist` path auto-fills the
+    /// field on first save). Production callers can therefore
+    /// treat `nil` as "legacy + read-only so far" and fall back
+    /// to `directoryName` when matching is needed.
+    public var bundleID: UUID? {
+        get throws { try ensureDocument().id }
+    }
+
     public var name: String {
         get throws { try ensureDocument().name }
     }
@@ -367,6 +377,7 @@ public final class HorizonBundle: Identifiable, ObservableObject, Equatable {
         let now = Date()
         let document = BundleDocument(
             formatVersion: BundleDocument.currentFormatVersion,
+            id: UUID(),
             name: name,
             capturedAt: capturedAt,
             modifiedAt: capturedAt ?? now,
@@ -462,6 +473,12 @@ public final class HorizonBundle: Identifiable, ObservableObject, Equatable {
     private func persist(_ document: inout BundleDocument, bumpModified: Bool) async throws {
         if bumpModified {
             document.modifiedAt = Date()
+        }
+        // Auto-fill the stable identifier for legacy bundles. Any
+        // mutation on a pre-v0.9.0 bundle that lacked `id` upgrades
+        // it once and the value sticks for all future loads.
+        if document.id == nil {
+            document.id = UUID()
         }
         let dirURL = url
         let bundleURL = bundleJSONURL

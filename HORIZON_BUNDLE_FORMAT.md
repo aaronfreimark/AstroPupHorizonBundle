@@ -45,6 +45,7 @@ indexes them.
 ```json
 {
   "formatVersion": 1,
+  "id": "F1B2A3C4-D5E6-7890-1234-56789ABCDEF0",
   "name": "Brooklyn Heights",
   "capturedAt": "2025-09-15T10:30:00Z",
   "modifiedAt": "2025-09-15T10:35:12Z",
@@ -103,6 +104,7 @@ indexes them.
 | Field | Type | Required | Notes |
 |---|---|---|---|
 | `formatVersion` | integer | yes | `1` for this spec. Bump on breaking changes. |
+| `id` | string (UUID) | no\* | Stable per-bundle identifier. Assigned at create time, never changes. Survives renames, directory moves, and cross-device iCloud syncs of the same bundle. \*Optional in the spec for backward compatibility with bundles written before this field existed; readers should treat absence as "legacy" and consider falling back to directory-name matching. Writers MUST emit it on all new bundles and SHOULD auto-fill on first save of any legacy bundle they modify. |
 | `name` | string | yes | User-visible name. Single source of truth. |
 | `capturedAt` | RFC3339 timestamp | no | When source frames were shot. Immutable after capture. Absent for bundles authored without a capture event (e.g. HRZ imports). |
 | `modifiedAt` | RFC3339 timestamp | no | Last modification. Writers SHOULD set this on every save when known; readers MUST tolerate absence (HRZ imports, etc.). |

@@ -29,6 +29,15 @@ public struct BundleDocument: Codable, Equatable, Sendable {
     /// understand.
     public var formatVersion: Int
 
+    /// Stable per-bundle identifier. Assigned at create time, never
+    /// changes. Survives renames, directory moves, and cross-device
+    /// iCloud syncs of the same bundle. Optional in Codable for
+    /// backward compatibility with bundles written before this
+    /// field existed; legacy bundles get a fresh UUID assigned on
+    /// their first persist (any mutation through `HorizonBundle`'s
+    /// domain mutators).
+    public var id: UUID?
+
     /// User-visible name. Single source of truth — readers MUST NOT
     /// look elsewhere.
     public var name: String
@@ -72,6 +81,7 @@ public struct BundleDocument: Codable, Equatable, Sendable {
 
     public init(
         formatVersion: Int = Self.currentFormatVersion,
+        id: UUID? = nil,
         name: String,
         capturedAt: Date? = nil,
         modifiedAt: Date? = nil,
@@ -83,6 +93,7 @@ public struct BundleDocument: Codable, Equatable, Sendable {
         frames: [FrameEntry]? = nil
     ) {
         self.formatVersion = formatVersion
+        self.id = id
         self.name = name
         self.capturedAt = capturedAt
         self.modifiedAt = modifiedAt

@@ -143,6 +143,36 @@ final class BundleStoreTests: XCTestCase {
         XCTAssertEqual(store.bundles.count, 1)
     }
 
+    // MARK: - Lookup by id
+
+    /// The id-based lookup finds the right bundle even after the
+    /// directory has been renamed (which would invalidate a
+    /// directoryName-based reference).
+    func testBundle_byID_findsAcrossRename() async throws {
+        let bundle = try await create(named: "Original")
+        let id = try XCTUnwrap(try bundle.bundleID)
+
+        _ = try await store.renameBundle(bundle, to: "After Rename")
+
+        let found = store.bundle(id: id)
+        XCTAssertNotNil(found)
+        XCTAssertEqual(try found?.name, "After Rename")
+        XCTAssertEqual(try found?.bundleID, id, "id MUST NOT change on rename")
+    }
+
+    /// Two bundles created back-to-back get distinct ids.
+    func testBundle_byID_distinctAcrossBundles() async throws {
+        let a = try await create(named: "A")
+        let b = try await create(named: "B")
+        XCTAssertNotEqual(try a.bundleID, try b.bundleID)
+    }
+
+    /// Unknown id returns nil rather than a fuzzy match.
+    func testBundle_byID_returnsNilForUnknownID() async throws {
+        _ = try await create(named: "Something")
+        XCTAssertNil(store.bundle(id: UUID()))
+    }
+
     // MARK: - Import
 
     func testImport_copiesForeignBundleIntoBase() async throws {

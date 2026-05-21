@@ -104,6 +104,70 @@ final class HorizonBundleTests: XCTestCase {
         XCTAssertNil(try bundle.compassOffsetDegrees)
     }
 
+    // MARK: - Stable identifier
+
+    /// New bundles get a UUID at create time.
+    func testCreate_assignsStableID() async throws {
+        let bundle = try await makeBundle()
+        XCTAssertNotNil(try bundle.bundleID)
+    }
+
+    /// The id assigned at create time survives a fresh disk read.
+    func testBundleID_persistsAcrossInstances() async throws {
+        let writer = try await makeBundle()
+        let firstID = try XCTUnwrap(try writer.bundleID)
+
+        // Fresh instance forces a disk reload — value should match.
+        let reader = HorizonBundle(url: writer.url)
+        XCTAssertEqual(try reader.bundleID, firstID)
+    }
+
+    /// The id survives a rename: directoryName changes but the
+    /// stable identifier doesn't.
+    func testBundleID_survivesRename() async throws {
+        let bundle = try await makeBundle()
+        let originalID = try XCTUnwrap(try bundle.bundleID)
+        let originalDirName = bundle.directoryName
+
+        try await bundle.setName("Renamed In Place")
+
+        // bundle.setName doesn't move the directory (that's
+        // BundleStore.renameBundle's job), but the id MUST be
+        // preserved either way.
+        XCTAssertEqual(try bundle.bundleID, originalID)
+        XCTAssertEqual(bundle.directoryName, originalDirName)
+    }
+
+    /// Legacy bundle missing the `id` field decodes cleanly with
+    /// nil, then auto-fills on first persist.
+    func testBundleID_legacyBundleAutoFillsOnFirstPersist() async throws {
+        // Write a bundle.json by hand with no `id` field — simulates
+        // a bundle authored before this field existed.
+        let url = bundleURL()
+        try FileManager.default.createDirectory(at: url, withIntermediateDirectories: true)
+        let legacyJSON = #"""
+        {
+          "formatVersion": 1,
+          "name": "Legacy Bundle",
+          "modifiedAt": "2025-01-01T00:00:00Z"
+        }
+        """#
+        try Data(legacyJSON.utf8).write(
+            to: url.appendingPathComponent(HorizonBundle.bundleJSONFilename)
+        )
+
+        let bundle = HorizonBundle(url: url)
+        XCTAssertNil(try bundle.bundleID, "Legacy bundle starts with nil id")
+
+        // Any mutation triggers persist, which auto-fills the id.
+        try await bundle.setName("Now Mutated")
+        let assigned = try XCTUnwrap(try bundle.bundleID)
+
+        // A fresh instance reading from disk sees the same assigned id.
+        let reader = HorizonBundle(url: url)
+        XCTAssertEqual(try reader.bundleID, assigned)
+    }
+
     // MARK: - Error cases on reads
 
     func testReads_missingDirectory_throws() {
