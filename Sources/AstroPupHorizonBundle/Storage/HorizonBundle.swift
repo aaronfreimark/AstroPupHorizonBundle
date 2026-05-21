@@ -226,6 +226,48 @@ public final class HorizonBundle: Identifiable, ObservableObject, Equatable {
         try await persist(&doc, bumpModified: true)
     }
 
+    /// Replace the wall-clock capture timestamp. Used by the recapture
+    /// flow when re-surveying an existing site — the bundle's
+    /// `capturedAt` advances to reflect the new capture so list
+    /// sorting and "Captured" labels stay meaningful.
+    public func setCapturedAt(_ date: Date?) async throws {
+        var doc = try ensureDocument()
+        doc.capturedAt = date
+        try await persist(&doc, bumpModified: true)
+    }
+
+    /// Replace the recorded app version string. Bumped on every
+    /// capture/recapture so support can tell which Horizon build
+    /// produced the on-disk state.
+    public func setAppVersion(_ version: String?) async throws {
+        var doc = try ensureDocument()
+        doc.appVersion = version
+        try await persist(&doc, bumpModified: true)
+    }
+
+    /// Atomic multi-field update of the capture metadata. Preferred
+    /// over the individual setters when several fields change
+    /// together (notably: recapture), so the on-disk JSON is rewritten
+    /// once instead of four times. Pass `nil` to clear a field;
+    /// `appVersion` defaults to "leave alone" to keep the call site
+    /// short when the version isn't changing.
+    public func replaceCaptureMetadata(
+        capturedAt: Date?,
+        captureLocation: Location?,
+        compassOffsetDegrees: Double?,
+        appVersion: String? = nil,
+        updateAppVersion: Bool = true
+    ) async throws {
+        var doc = try ensureDocument()
+        doc.capturedAt = capturedAt
+        doc.captureLocation = captureLocation
+        doc.compassOffsetDegrees = compassOffsetDegrees
+        if updateAppVersion {
+            doc.appVersion = appVersion
+        }
+        try await persist(&doc, bumpModified: true)
+    }
+
     // MARK: - Horizon mutations
 
     public func setHorizon(points: [HorizonPoint]) async throws {
